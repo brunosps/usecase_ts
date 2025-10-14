@@ -22,7 +22,11 @@
     "version": "npm run format && git add -A src",
     "docs": "typedoc --out docs src/index.ts",
     "release": "semantic-release",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags",
+    "examples": "npx ts-node examples/index.ts",
+    "showcase": "npx ts-node examples/showcase.ts",
+    "demo": "npx ts-node examples/complete-demo.ts",
+    "value-wrap": "npx ts-node examples/value-wrapping-examples.ts"
   },
   "husky": {
     "hooks": {

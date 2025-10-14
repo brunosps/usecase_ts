@@ -43,8 +43,10 @@ result
 
 ### ResultWrapper for Legacy Integration
 - **ResultWrapper**: Transforms non-Result functions into Result-returning functions
-- **Simplified API**: Only 2 functions - `ResultWrapper()` (sync) and `ResultAsyncWrapper()` (async)
-- **Auto-detection**: Automatically detects if parameters are provided
+- **ResultAsyncWrapper**: Transforms async functions into Result-returning functions
+- **ResultWrapValue**: Transforms already executed values into Results with validation
+- **ResultWrapValueAsync**: Transforms Promises/async values into Results with validation
+- **Simplified API**: 4 wrapper functions with auto-detection of parameters
 - Error mapping: Map specific error types to failure types via `errorMappings`
 - Includes pre-built error classes: `ValidationError`, `AuthenticationError`, `NotFoundError`, etc.
 - Usage: `ResultWrapper(fn, [params], { errorMappings, context })` or `ResultWrapper(fn, { options })`
@@ -64,6 +66,12 @@ result
 - **Auto-fix**: `npm run lint:fix`
 - **Format**: `npm run format`
 
+### Examples & Demo
+- **Complete Demo**: `npm run demo` (all functionalities)
+- **Value Wrapping**: `npm run value-wrap` (focus on value wrapping features)
+- **Showcase**: `npm run showcase` (complete practical demo)
+- **All Examples**: `npm run examples` (interactive menu)
+
 ### Context Tracking
 - Each use case execution automatically creates `Context<I, O>` with input/output
 - Context merges across chained operations via `and_then()`
@@ -76,8 +84,19 @@ src/
 ├── result.ts             # Result, Success, Failure, ResultPromise
 ├── use-case.ts           # UseCase abstract class and BaseUseCase
 ├── context.ts            # Context tracking implementation
-├── result-wrapper.ts     # ResultWrapper for legacy function integration
+├── result-wrapper.ts     # All wrapper functions for legacy integration
 └── *.test.ts             # Jest test files
+
+examples/
+├── 01-basic-usage.ts     # Core concepts and basic use cases
+├── 02-wrapper-functions.ts # ResultWrapper and ResultAsyncWrapper
+├── 03-value-wrapping.ts   # ResultWrapValue and ResultWrapValueAsync
+├── 04-chaining-operations.ts # and_then chaining examples
+├── 05-framework-integration.ts # NestJS, Express integration
+├── complete-demo.ts      # Complete practical demonstration
+├── value-wrapping-examples.ts # Detailed value wrapping scenarios
+├── showcase.ts          # Full showcase of all features
+└── index.ts             # Interactive examples menu
 ```
 
 ## Integration Notes
@@ -100,3 +119,11 @@ src/
 - **Promise handling**: Use `ResultPromise` for fluent async operations
 - **Static vs Instance**: Both `UseCase.call()` and `instance.call()` supported
 - **Context inheritance**: Previous use case contexts preserved in chains
+
+## Value Wrapping Features
+- **ResultWrapValue**: Convert values, null, undefined, or errors into Results
+- **ResultWrapValueAsync**: Convert Promises or async values into Results
+- **Validation Options**: `nullAsFailure`, `undefinedAsFailure`, `emptyStringAsFailure`, `zeroAsFailure`, `emptyArrayAsFailure`, `emptyObjectAsFailure`
+- **Custom Validation**: Provide custom validation functions that return boolean or error string
+- **Error Mapping**: Automatic error type mapping for wrapped values
+- **Context Support**: Full context tracking for wrapped values

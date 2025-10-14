@@ -5,17 +5,17 @@
 
 # usecase_ts
 
-Uma implementação robusta do **Result Pattern** para TypeScript, projetada para gerenciar fluxos de erro de forma elegante e previsível. Inspirado em [u-case](https://github.com/serradura/u-case) e otimizado para desenvolvimento moderno.
+A robust **Result Pattern** implementation for TypeScript, designed to manage error flows elegantly and predictably. Inspired by [u-case](https://github.com/serradura/u-case) and optimized for modern development.
 
-## 🎯 Por que usar usecase_ts?
+## 🎯 Why use usecase_ts?
 
-- ✅ **Zero Exceptions**: Elimine try/catch desnecessários e erros não tratados
-- ✅ **Type Safety**: Tipagem completa com generics TypeScript
-- ✅ **Fluent API**: Encadeamento elegante de operações com `and_then`
-- ✅ **Legacy Integration**: Transforme qualquer função/valor em Result
-- ✅ **Framework Agnostic**: Funciona com qualquer framework (NestJS, Express, etc.)
-- ✅ **Rich Error Handling**: Mapeamento customizado de tipos de erro
-- ✅ **Context Tracking**: Rastreamento automático de contexto
+- ✅ **Zero Exceptions**: Eliminate unnecessary try/catch and unhandled errors
+- ✅ **Type Safety**: Complete typing with TypeScript generics
+- ✅ **Fluent API**: Elegant operation chaining with `and_then`
+- ✅ **Legacy Integration**: Transform any function/value into Result
+- ✅ **Framework Agnostic**: Works with any framework (NestJS, Express, etc.)
+- ✅ **Rich Error Handling**: Custom error type mapping
+- ✅ **Context Tracking**: Automatic context tracking
 
 ## 📦 Instalação
 
@@ -23,62 +23,80 @@ Uma implementação robusta do **Result Pattern** para TypeScript, projetada par
 npm install usecase_ts
 ```
 
+## 🎮 Exemplos Práticos
+
+Execute exemplos completos para ver todas as funcionalidades:
+
+```bash
+# Demo completo com todas as funcionalidades
+npm run demo
+
+# Foco em value wrapping
+npm run value-wrap
+
+# Showcase completo
+npm run showcase
+
+# Menu interativo de exemplos
+npm run examples
+```
+
 ## 🚀 Quick Start
 
 ```typescript
 import { UseCase, Success, Failure, ResultWrapValue } from 'usecase_ts';
 
-// Use Case simples
+// Simple Use Case
 class GetUserUseCase extends UseCase<{ id: string }, { name: string, email: string }> {
   async execute(input: { id: string }) {
     if (!input.id) {
-      return Failure(new Error('ID é obrigatório'), 'VALIDATION_ERROR');
+      return Failure(new Error('ID is required'), 'VALIDATION_ERROR');
     }
     
-    return Success({ name: 'João Silva', email: 'joao@exemplo.com' });
+    return Success({ name: 'John Doe', email: 'john@example.com' });
   }
 }
 
-// Uso básico
+// Basic usage
 const result = await GetUserUseCase.call({ id: '123' });
 
 result
-  .onSuccess((user) => console.log('Usuário:', user))
-  .onFailure((error) => console.error('Erro:', error.message));
+  .onSuccess((user) => console.log('User:', user))
+  .onFailure((error) => console.error('Error:', error.message));
 
-// Transformar valores existentes em Results
+// Transform existing values into Results
 const existingValue = "Hello World";
 const wrappedResult = ResultWrapValue(existingValue);
 // → Success<string>
 
-const errorValue = new Error("Algo deu errado");
+const errorValue = new Error("Something went wrong");
 const wrappedError = ResultWrapValue(errorValue);
 // → Failure<any>
 ```
 
-## 🎨 Conceitos Fundamentais
+## 🎨 Core Concepts
 
 ### 1. Result Pattern
 
-Toda operação retorna um `Result<T>` que pode ser:
+Every operation returns a `Result<T>` that can be:
 
 ```typescript
-// Sucesso - contém os dados
+// Success - contains data
 Success(data)
 
-// Falha - contém erro e tipo
+// Failure - contains error and type
 Failure(error, type)
 ```
 
 ### 2. Use Cases
 
-Encapsule lógica de negócio em classes que estendem `UseCase<Input, Output>`:
+Encapsulate business logic in classes that extend `UseCase<Input, Output>`:
 
 ```typescript
 class CalculateUseCase extends UseCase<{ a: number, b: number }, { result: number }> {
   async execute(input: { a: number, b: number }) {
     if (typeof input.a !== 'number' || typeof input.b !== 'number') {
-      return Failure(new Error('Entrada inválida'), 'VALIDATION_ERROR');
+      return Failure(new Error('Invalid input'), 'VALIDATION_ERROR');
     }
     
     return Success({ result: input.a + input.b });
@@ -86,46 +104,46 @@ class CalculateUseCase extends UseCase<{ a: number, b: number }, { result: numbe
 }
 ```
 
-### 3. Wrappers - A Grande Inovação
+### 3. Wrappers
 
-#### 3.1 ResultWrapper - Para Funções
+#### 3.1 ResultWrapper - For Functions
 
-Transforme qualquer função em uma que retorna Result:
+Transform any function into one that returns Result:
 
 ```typescript
 import { ResultWrapper, ValidationError } from 'usecase_ts';
 
-// Função existente que pode lançar erro
+// Existing function that might throw
 const validateEmail = (email: string) => {
-  if (!email.includes('@')) throw new ValidationError('Email inválido');
+  if (!email.includes('@')) throw new ValidationError('Invalid email');
   return true;
 };
 
-// Wrapped - nunca mais vai lançar exception
-const result = ResultWrapper(validateEmail, ['email@teste.com'], {
+// Wrapped - will never throw exceptions
+const result = ResultWrapper(validateEmail, ['email@test.com'], {
   errorMappings: [
     { errorType: ValidationError, failureType: 'VALIDATION_ERROR' }
   ]
 });
 
 result
-  .onSuccess(() => console.log('Email válido!'))
-  .onFailure((error) => console.log('Email inválido:', error.message), 'VALIDATION_ERROR');
+  .onSuccess(() => console.log('Valid email!'))
+  .onFailure((error) => console.log('Invalid email:', error.message), 'VALIDATION_ERROR');
 ```
 
-#### 3.2 ResultWrapValue - Para Valores Executados
+#### 3.2 ResultWrapValue - For Executed Values
 
-**NOVO!** Transforme valores já executados (incluindo erros, null, undefined) em Results:
+Transform already executed values (including errors, null, undefined) into Results:
 
 ```typescript
 import { ResultWrapValue } from 'usecase_ts';
 
-// Cenário 1: Valor válido
-const data = { id: 1, name: 'João' };
+// Scenario 1: Valid value
+const data = { id: 1, name: 'John' };
 const result1 = ResultWrapValue(data);
 // → Success<{id: number, name: string}>
 
-// Cenário 2: Erro capturado
+// Scenario 2: Caught error
 let capturedError: Error | null = null;
 try {
   JSON.parse('invalid json');
@@ -135,26 +153,26 @@ try {
 const result2 = ResultWrapValue(capturedError);
 // → Failure<any>
 
-// Cenário 3: Valor que pode ser null/undefined
-const user = findUserById('999'); // pode retornar null
+// Scenario 3: Value that might be null/undefined
+const user = findUserById('999'); // might return null
 const result3 = ResultWrapValue(user, {
   nullAsFailure: true,
   defaultFailureType: 'USER_NOT_FOUND'
 });
-// → Failure se user for null
+// → Failure if user is null
 
-// Cenário 4: Validações customizadas
+// Scenario 4: Custom validations
 const result4 = ResultWrapValue(someValue, {
   customValidation: (value) => {
-    if (value < 0) return 'Valor deve ser positivo';
+    if (value < 0) return 'Value must be positive';
     return true;
   }
 });
 ```
 
-## 🔧 Funcionalidades Avançadas
+## 🔧 Advanced Features
 
-### 1. Mapeamento de Erros
+### 1. Error Mapping
 
 ```typescript
 import { 
@@ -173,11 +191,11 @@ const errorMappings = [
   { errorType: AuthorizationError, failureType: 'FORBIDDEN' }
 ];
 
-// Use em qualquer wrapper
+// Use in any wrapper
 const result = ResultWrapper(riskyFunction, [params], { errorMappings });
 ```
 
-### 2. Encadeamento de Operações
+### 2. Operation Chaining
 
 ```typescript
 const result = await ValidateInputUseCase.call({ email: 'user@test.com' })
@@ -189,54 +207,54 @@ const result = await ValidateInputUseCase.call({ email: 'user@test.com' })
   }));
 
 result
-  .onSuccess((log) => console.log('Processo completo:', log))
-  .onFailure((error) => console.error('Validação falhou'), 'VALIDATION_ERROR')
-  .onFailure((error) => console.error('Usuário não encontrado'), 'NOT_FOUND')
-  .onFailure((error) => console.error('Falha geral'));
+  .onSuccess((log) => console.log('Complete process:', log))
+  .onFailure((error) => console.error('Validation failed'), 'VALIDATION_ERROR')
+  .onFailure((error) => console.error('User not found'), 'NOT_FOUND')
+  .onFailure((error) => console.error('General failure'));
 ```
 
-### 3. Validações Avançadas com ResultWrapValue
+### 3. Advanced Validations with ResultWrapValue
 
 ```typescript
-// Exemplo: API response validation
+// Example: API response validation
 const apiResponse = await fetch('/api/user/123').then(r => r.json());
 
 const validatedResponse = ResultWrapValue(apiResponse, {
-  // Validações básicas
+  // Basic validations
   nullAsFailure: true,
   undefinedAsFailure: true,
   emptyObjectAsFailure: true,
   
-  // Validação customizada
+  // Custom validation
   customValidation: (user) => {
-    if (!user.id) return 'ID é obrigatório';
-    if (!user.email?.includes('@')) return 'Email inválido';
-    if (!user.name || user.name.length < 2) return 'Nome muito curto';
+    if (!user.id) return 'ID is required';
+    if (!user.email?.includes('@')) return 'Invalid email';
+    if (!user.name || user.name.length < 2) return 'Name too short';
     return true;
   },
   
-  // Contexto para debugging
+  // Context for debugging
   context: { source: 'api_user_fetch' },
   useCaseClass: 'UserValidation'
 });
 
 validatedResponse
-  .onSuccess((user) => console.log('Usuário válido:', user))
-  .onFailure((error) => console.error('Usuário inválido:', error.message));
+  .onSuccess((user) => console.log('Valid user:', user))
+  .onFailure((error) => console.error('Invalid user:', error.message));
 ```
 
-### 4. Integração com Async/Await
+### 4. Async/Await Integration
 
 ```typescript
 import { ResultWrapValueAsync } from 'usecase_ts';
 
-// Para Promises ou valores assíncronos
+// For Promises or async values
 const processUser = async (userId: string) => {
   const userPromise = fetch(`/api/users/${userId}`).then(r => r.json());
   
   const result = await ResultWrapValueAsync(userPromise, {
     customValidation: (user) => {
-      if (!user || !user.active) return 'Usuário inativo';
+      if (!user || !user.active) return 'Inactive user';
       return true;
     },
     errorMappings: [
@@ -248,9 +266,9 @@ const processUser = async (userId: string) => {
 };
 ```
 
-## 🏗️ Exemplos do Mundo Real
+## 🏗️ Real-World Examples
 
-### 1. Service Layer com Error Handling
+### 1. Service Layer with Error Handling
 
 ```typescript
 class UserService {
@@ -258,8 +276,8 @@ class UserService {
     try {
       const response = await fetch(`/api/users/${id}`);
       if (response.status === 404) return null;
-      if (response.status === 401) throw new AuthenticationError('Token expirado');
-      if (!response.ok) throw new Error('Erro na API');
+      if (response.status === 401) throw new AuthenticationError('Token expired');
+      if (!response.ok) throw new Error('API error');
       return response.json();
     } catch (error) {
       throw error;
@@ -267,8 +285,8 @@ class UserService {
   }
 
   validateUser(user: User): boolean {
-    if (!user.email) throw new ValidationError('Email obrigatório');
-    if (!user.name) throw new ValidationError('Nome obrigatório');
+    if (!user.email) throw new ValidationError('Email required');
+    if (!user.name) throw new ValidationError('Name required');
     return true;
   }
 }
@@ -285,20 +303,20 @@ class GetValidatedUserUseCase extends UseCase<{ id: string }, User> {
       { errorType: NotFoundError, failureType: 'NOT_FOUND' }
     ];
 
-    // 1. Buscar usuário (pode retornar null)
+    // 1. Fetch user (might return null)
     const user = await this.userService.fetchUser(input.id);
     
-    // 2. Validar se existe usando ResultWrapValue
+    // 2. Validate existence using ResultWrapValue
     const userExistsResult = ResultWrapValue(user, {
       nullAsFailure: true,
       defaultFailureType: 'NOT_FOUND'
     });
     
     if (userExistsResult.isFailure()) {
-      return Failure(new Error('Usuário não encontrado'), 'NOT_FOUND');
+      return Failure(new Error('User not found'), 'NOT_FOUND');
     }
 
-    // 3. Validar dados do usuário usando ResultWrapper
+    // 3. Validate user data using ResultWrapper
     const validationResult = ResultWrapper(
       this.userService.validateUser.bind(this.userService),
       [user],
@@ -313,17 +331,17 @@ class GetValidatedUserUseCase extends UseCase<{ id: string }, User> {
   }
 }
 
-// Uso
+// Usage
 const result = await GetValidatedUserUseCase.call({ id: '123' });
 
 result
-  .onSuccess((user) => console.log('Usuário válido:', user))
-  .onFailure((error) => console.error('Validação falhou'), 'VALIDATION_ERROR')
-  .onFailure((error) => console.error('Usuário não encontrado'), 'NOT_FOUND')
-  .onFailure((error) => console.error('Token inválido'), 'AUTH_ERROR');
+  .onSuccess((user) => console.log('Valid user:', user))
+  .onFailure((error) => console.error('Validation failed'), 'VALIDATION_ERROR')
+  .onFailure((error) => console.error('User not found'), 'NOT_FOUND')
+  .onFailure((error) => console.error('Invalid token'), 'AUTH_ERROR');
 ```
 
-### 2. NestJS Integration Completa
+### 2. Complete NestJS Integration
 
 ```typescript
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
@@ -368,7 +386,7 @@ export class CreateUserUseCase extends UseCase<CreateUserInput, CreateUserOutput
       return Failure(inputValidation.getError(), inputValidation.getType());
     }
 
-    // 2. Verificar se email já existe
+    // 2. Check if email already exists
     const existingUser = await this.userRepository.findByEmail(input.email);
     const emailCheck = ResultWrapValue(existingUser, {
       customValidation: (user) => {
@@ -393,7 +411,7 @@ export class CreateUserUseCase extends UseCase<CreateUserInput, CreateUserOutput
       return Failure(hashResult.getError(), hashResult.getType());
     }
 
-    // 4. Criar usuário
+    // 4. Create user
     const createResult = await ResultAsyncWrapper(
       this.userRepository.create.bind(this.userRepository),
       [{
@@ -449,7 +467,7 @@ export class UserController {
 ### 3. Data Processing Pipeline
 
 ```typescript
-// Pipeline de processamento de dados com error handling robusto
+// Data processing pipeline with robust error handling
 class DataProcessingPipeline {
   async processCSVFile(file: File) {
     return ProcessFileUseCase.call({ file })
@@ -459,7 +477,7 @@ class DataProcessingPipeline {
           ResultWrapValue(row, {
             customValidation: (row) => {
               if (!row.email?.includes('@')) return `Linha ${row.line}: Email inválido`;
-              if (!row.name) return `Linha ${row.line}: Nome obrigatório`;
+              if (!row.name) return `Line ${row.line}: Name required`;
               return true;
             }
           })
@@ -483,9 +501,9 @@ class DataProcessingPipeline {
 }
 ```
 
-## 📊 Comparação: Antes vs Depois
+## 📊 Comparison: Before vs After
 
-### ❌ Antes (com try/catch tradicional)
+### ❌ Before (with traditional try/catch)
 
 ```typescript
 class UserService {
@@ -502,35 +520,35 @@ class UserService {
       
       return user;
     } catch (error) {
-      // Erro pode ser qualquer coisa
+      // Error can be anything
       console.error(error);
-      throw error; // Propaga erro
+      throw error; // Propagates error
     }
   }
 }
 
-// Uso - sempre precisar de try/catch
+// Usage - always need try/catch
 try {
   const user = await userService.getUser('123');
   console.log(user);
 } catch (error) {
-  // Não sei que tipo de erro é
+  // Don't know what type of error it is
   console.error(error);
 }
 ```
 
-### ✅ Depois (com usecase_ts)
+### ✅ After (with usecase_ts)
 
 ```typescript
 class GetUserUseCase extends UseCase<{ id: string }, User> {
   async execute(input: { id: string }) {
     const user = await this.repository.findById(input.id);
     
-    // Usar ResultWrapValue para validar
+    // Use ResultWrapValue to validate
     return ResultWrapValue(user, {
       nullAsFailure: true,
       customValidation: (u) => {
-        if (!u.email?.includes('@')) return 'Email inválido';
+        if (!u.email?.includes('@')) return 'Invalid email';
         return true;
       },
       defaultFailureType: 'USER_NOT_FOUND'
@@ -538,31 +556,31 @@ class GetUserUseCase extends UseCase<{ id: string }, User> {
   }
 }
 
-// Uso - sem try/catch, error handling tipado
+// Usage - no try/catch, typed error handling
 const result = await GetUserUseCase.call({ id: '123' });
 
 result
-  .onSuccess((user) => console.log('Usuário:', user))
-  .onFailure((error) => console.error('Usuário não encontrado'), 'USER_NOT_FOUND')
-  .onFailure((error) => console.error('Erro de validação'), 'VALIDATION_ERROR');
+  .onSuccess((user) => console.log('User:', user))
+  .onFailure((error) => console.error('User not found'), 'USER_NOT_FOUND')
+  .onFailure((error) => console.error('Validation error'), 'VALIDATION_ERROR');
 ```
 
-## 📚 API Reference Completa
+## 📚 Complete API Reference
 
 ### Core Classes
 
 #### `Result<T>`
 ```typescript
 interface Result<T> {
-  getValue(): T;                          // Obter valor de sucesso
-  getError(): Error;                      // Obter erro
-  getType(): string;                      // Obter tipo ('SUCCESS', 'FAILURE', custom)
-  isSuccess(): boolean;                   // Verificar se é sucesso
-  isFailure(): boolean;                   // Verificar se é falha
-  and_then<U>(fn): Promise<Result<U>>;    // Encadear operações
-  onSuccess(fn): Result<T>;               // Callback para sucesso
-  onFailure(fn, type?): Result<T>;        // Callback para falha
-  context?: Record<string, any>;          // Contexto opcional
+  getValue(): T;                          // Get success value
+  getError(): Error;                      // Get error
+  getType(): string;                      // Get type ('SUCCESS', 'FAILURE', custom)
+  isSuccess(): boolean;                   // Check if success
+  isFailure(): boolean;                   // Check if failure
+  and_then<U>(fn): Promise<Result<U>>;    // Chain operations
+  onSuccess(fn): Result<T>;               // Success callback
+  onFailure(fn, type?): Result<T>;        // Failure callback
+  context?: Record<string, any>;          // Optional context
   useCaseClass?: string;                  // Nome da classe do use case
 }
 ```
@@ -587,26 +605,26 @@ Criar um resultado de falha.
 ### Wrapper Functions
 
 #### `ResultWrapper<T>(fn, params?, options?): Result<T>`
-Envolver funções síncronas para retornar Results.
+Wrap synchronous functions to return Results.
 
 ```typescript
-// Sem parâmetros
+// Without parameters
 const result1 = ResultWrapper(() => getCurrentTime());
 
-// Com parâmetros
+// With parameters
 const result2 = ResultWrapper(addNumbers, [5, 3]);
 
-// Com options
+// With options
 const result3 = ResultWrapper(validateEmail, ['test@example.com'], {
   errorMappings: [{ errorType: ValidationError, failureType: 'VALIDATION_ERROR' }]
 });
 ```
 
 #### `ResultAsyncWrapper<T>(fn, params?, options?): Promise<Result<T>>`
-Envolver funções assíncronas para retornar Results.
+Wrap asynchronous functions to return Results.
 
 #### `ResultWrapValue<T>(value, options?): Result<T>`
-**NOVO!** Envolver valores já executados em Results.
+Wrap already executed values into Results.
 
 ```typescript
 // Valor simples
@@ -615,7 +633,7 @@ const result1 = ResultWrapValue("hello");
 // Com validações
 const result2 = ResultWrapValue(user, {
   nullAsFailure: true,
-  customValidation: (u) => u.email ? true : 'Email obrigatório'
+  customValidation: (u) => u.email ? true : 'Email required'
 });
 
 // Erro capturado
@@ -623,13 +641,13 @@ const result3 = ResultWrapValue(caughtError);
 ```
 
 #### `ResultWrapValueAsync<T>(value, options?): Promise<Result<T>>`
-**NOVO!** Envolver valores/Promises assíncronos em Results.
+Wrap async values/Promises into Results.
 
 ```typescript
 // Promise
 const result1 = await ResultWrapValueAsync(fetchUser());
 
-// Valor com validação async
+// Value with async validation
 const result2 = await ResultWrapValueAsync(someValue, {
   customValidation: async (val) => await validateWithAPI(val)
 });
@@ -638,7 +656,7 @@ const result2 = await ResultWrapValueAsync(someValue, {
 ### Error Classes Pré-definidas
 
 ```typescript
-ValidationError     // Para erros de validação
+ValidationError     // For validation errors
 AuthenticationError // Para erros de autenticação  
 AuthorizationError  // Para erros de autorização
 NotFoundError      // Para recursos não encontrados
@@ -669,37 +687,37 @@ interface ValueWrapperOptions extends WrapperOptions {
 }
 ```
 
-## 🎯 Melhores Práticas
+## 🎯 Best Practices
 
-### 1. **Sempre retorne Results** 
+### 1. **Always return Results** 
 ```typescript
-// ❌ Não faça
+// ❌ Don't do
 async execute(input) {
   if (!input.valid) throw new Error('Invalid');
   return data;
 }
 
-// ✅ Faça
+// ✅ Do
 async execute(input) {
   if (!input.valid) return Failure(new Error('Invalid'), 'VALIDATION_ERROR');
   return Success(data);
 }
 ```
 
-### 2. **Use wrappers para legacy code**
+### 2. **Use wrappers for legacy code**
 ```typescript
-// ❌ Não mude funções existentes
-const user = await legacyFetchUser(id); // pode lançar exception
+// ❌ Don't change existing functions
+const user = await legacyFetchUser(id); // might throw exception
 
-// ✅ Wrapper para segurança
+// ✅ Wrapper for safety
 const result = await ResultAsyncWrapper(legacyFetchUser, [id], {
   errorMappings: [{ errorType: NotFoundError, failureType: 'NOT_FOUND' }]
 });
 ```
 
-### 3. **Use ResultWrapValue para valores já processados**
+### 3. **Use ResultWrapValue for already processed values**
 ```typescript
-// ❌ Verificações manuais
+// ❌ Manual checks
 if (user === null) {
   throw new Error('User not found');
 }
@@ -707,23 +725,23 @@ if (!user.email) {
   throw new Error('Email required');
 }
 
-// ✅ Validação com ResultWrapValue
+// ✅ Validation with ResultWrapValue
 const result = ResultWrapValue(user, {
   nullAsFailure: true,
-  customValidation: (u) => u.email ? true : 'Email obrigatório',
+  customValidation: (u) => u.email ? true : 'Email required',
   defaultFailureType: 'USER_INVALID'
 });
 ```
 
-### 4. **Encadeie operações**
+### 4. **Chain operations**
 ```typescript
-// ✅ Encadeamento fluido
+// ✅ Fluent chaining
 const result = await FirstUseCase.call(input)
   .and_then(async (data) => SecondUseCase.call(data))
   .and_then(async (data) => ThirdUseCase.call(data));
 ```
 
-### 5. **Handle diferentes tipos de erro**
+### 5. **Handle different error types**
 ```typescript
 result
   .onSuccess((data) => handleSuccess(data))
@@ -734,22 +752,24 @@ result
 
 ## 🚀 Features
 
-- ✅ **Type Safety**: Suporte completo ao TypeScript com generics
-- ✅ **Zero Dependencies**: Sem dependências externas
-- ✅ **Fluent API**: Operações encadeáveis com `and_then`
-- ✅ **Error Mapping**: Transforme qualquer erro em falhas tipadas
-- ✅ **Context Tracking**: Preservação automática de contexto
-- ✅ **Legacy Integration**: Envolva funções existentes com wrappers
-- ✅ **Value Wrapping**: Transforme valores/erros em Results
-- ✅ **Framework Agnostic**: Funciona com qualquer framework
-- ✅ **NestJS Ready**: Integração perfeita com injeção de dependência
+- ✅ **Type Safety**: Complete TypeScript support with generics
+- ✅ **Zero Dependencies**: No external dependencies  
+- ✅ **Fluent API**: Chainable operations with `and_then`
+- ✅ **Error Mapping**: Transform any error into typed failures
+- ✅ **Context Tracking**: Automatic context preservation
+- ✅ **Legacy Integration**: Wrap existing functions with wrappers
+- ✅ **Value Wrapping**: Transform values/errors into Results
+- ✅ **Framework Agnostic**: Works with any framework
+- ✅ **NestJS Ready**: Perfect integration with dependency injection
+- ✅ **Rich Examples**: Complete examples in /examples folder
+- ✅ **Interactive Demos**: Run `npm run demo` for hands-on experience
 
 ## 🔄 Migration Guide
 
-### De Exception-based para Result-based
+### From Exception-based to Result-based
 
 ```typescript
-// Antes
+// Before
 class OldService {
   async getUser(id: string): Promise<User> {
     const user = await this.db.findUser(id);
@@ -759,14 +779,14 @@ class OldService {
   }
 }
 
-// Depois  
+// After  
 class NewService extends UseCase<{id: string}, User> {
   async execute(input: {id: string}) {
     const user = await this.db.findUser(input.id);
     
     return ResultWrapValue(user, {
       nullAsFailure: true,
-      customValidation: (u) => u.active ? true : 'Usuário inativo',
+      customValidation: (u) => u.active ? true : 'Inactive user',
       defaultFailureType: 'USER_NOT_FOUND'
     });
   }
@@ -775,28 +795,28 @@ class NewService extends UseCase<{id: string}, User> {
 
 ## 📄 License
 
-MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+MIT - see the [LICENSE](LICENSE) file for details.
 
-## 🤝 Contribuindo
+## 🤝 Contributing
 
-Contribuições são bem-vindas! Veja [CONTRIBUTING.md](CONTRIBUTING.md) para guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-1. Fork o repositório
-2. Crie sua feature branch (`git checkout -b feature/nova-funcionalidade`)
-3. Escreva testes para suas mudanças
-4. Certifique-se que todos os testes passam (`npm test`)
-5. Commit suas mudanças (`git commit -m 'Add nova funcionalidade'`)
-6. Push para a branch (`git push origin feature/nova-funcionalidade`)
-7. Abra um Pull Request
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/new-feature`)
+3. Write tests for your changes
+4. Make sure all tests pass (`npm test`)
+5. Commit your changes (`git commit -m 'Add new feature'`)
+6. Push to the branch (`git push origin feature/new-feature`)
+7. Open a Pull Request
 
 ## 📊 Stats
 
-- **97 testes** passando
+- **97 tests** passing
 - **93% coverage**
-- **Zero dependências**
+- **Zero dependencies**
 - **TypeScript first**
 - **Production ready**
 
 ---
 
-Desenvolvido com ❤️ para a comunidade TypeScript
+Built with ❤️ for the TypeScript community
