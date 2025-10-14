@@ -1,7 +1,7 @@
 {
   "name": "usecase_ts",
-  "version": "1.0.0",
-  "description": "Uma implementação do padrão Result para TypeScript",
+  "version": "1.1.0",
+  "description": "Uma implementação robusta do Result Pattern para TypeScript com wrappers para integração legada",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -41,7 +41,12 @@
     "pattern",
     "error-handling",
     "usecase",
-    "clean-architecture"
+    "clean-architecture",
+    "wrapper",
+    "legacy-integration",
+    "null-safety",
+    "monads",
+    "functional-programming"
   ],
   "author": "Bruno Santos",
   "license": "MIT",
