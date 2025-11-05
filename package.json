@@ -1,6 +1,6 @@
 {
   "name": "usecase_ts",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Uma implementação robusta do Result Pattern para TypeScript com wrappers para integração legada",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
