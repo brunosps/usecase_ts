@@ -53,6 +53,13 @@ result
 
 ## Development Workflow
 
+### Debug & Development
+- **Debug Mode**: Set `USECASE_DEBUG=true` or `USECASETS_DEBUG=true` to enable debug logging
+- **Verbose Mode**: Set `USECASE_DEBUG_LEVEL=verbose` for detailed logging with input/output data
+- **Auto-Debug**: Debug automatically enabled when `NODE_ENV=development`
+- **Debug Output**: Shows ✅/❌ icons, execution times, error types, and function names
+- **Sensitive Data**: Automatically sanitizes `password`, `token`, `apiKey`, `authorization` fields in verbose mode
+
 ### Testing
 - **Test Command**: `npm test` (uses Jest with ts-jest preset)
 - **Watch Mode**: `npm run test:watch`
@@ -76,6 +83,12 @@ result
 - Each use case execution automatically creates `Context<I, O>` with input/output
 - Context merges across chained operations via `and_then()`
 - Access via `result.context[UseCaseName]._inputParams` and `._outputParams`
+
+### Debug Integration
+- Use cases automatically log execution when debug is enabled
+- Wrapper functions log creation and error handling
+- All Result operations respect debug configuration
+- Debug logger available via `getDebugLogger()` or `new DebugLogger()`
 
 ## Project Structure
 ```

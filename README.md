@@ -797,6 +797,84 @@ class NewService extends UseCase<{id: string}, User> {
 
 MIT - see the [LICENSE](LICENSE) file for details.
 
+## 🐛 Debug & Development
+
+usecase_ts includes comprehensive debug functionality to help during development and troubleshooting.
+
+### Environment Variables
+
+```bash
+# Enable debug logging
+USECASE_DEBUG=true
+# or
+USECASETS_DEBUG=true
+
+# Set debug level (basic or verbose)
+USECASE_DEBUG_LEVEL=verbose
+
+# Auto-enable debug in development
+NODE_ENV=development
+```
+
+### Debug Output
+
+```typescript
+// Set environment variable
+process.env.USECASE_DEBUG = 'true';
+
+class UserRegistrationUseCase extends BaseUseCase {
+  async execute(input: { email: string }) {
+    if (!input.email) {
+      return Failure(new Error('Email required'), 'VALIDATION_ERROR');
+    }
+    return Success({ userId: '123', email: input.email });
+  }
+}
+
+// Execution will show debug output:
+await new UserRegistrationUseCase().call({ email: 'user@example.com' });
+// ✅ [USECASE:SUCCESS] UserRegistrationUseCase (15ms)
+
+await new UserRegistrationUseCase().call({});
+// ❌ [USECASE:FAILURE] UserRegistrationUseCase (2ms) - VALIDATION_ERROR: Email required
+```
+
+### Verbose Mode
+
+Set `USECASE_DEBUG_LEVEL=verbose` for detailed logging:
+
+```bash
+🚀 [USECASE:START] UserRegistrationUseCase {
+  input: { email: 'user@example.com' },
+  timestamp: '2023-11-05T12:00:00.000Z'
+}
+
+✅ [USECASE:SUCCESS] UserRegistrationUseCase {
+  duration: '15ms',
+  output: { userId: '123', email: 'user@example.com' },
+  timestamp: '2023-11-05T12:00:00.015Z'
+}
+```
+
+### Wrapper Functions Debug
+
+Debug also works with wrapper functions:
+
+```typescript
+process.env.USECASE_DEBUG = 'true';
+
+// Will log: ✅ [ResultWrapper:SUCCESS] myFunction (5ms)
+const result = ResultWrapper(myFunction, [params]);
+
+// Will log: ❌ [ResultWrapValue:FAILURE] validation - Value is null
+const result2 = ResultWrapValue(null, { nullAsFailure: true });
+```
+
+### Sensitive Data
+
+Debug automatically sanitizes sensitive data in verbose mode:
+- `password`, `token`, `apiKey`, `authorization` fields are replaced with `[REDACTED]`
+
 ## 🤝 Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
@@ -811,11 +889,12 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 ## 📊 Stats
 
-- **97 tests** passing
-- **93% coverage**
+- **110 tests** passing
+- **94% coverage**
 - **Zero dependencies**
 - **TypeScript first**
 - **Production ready**
+- **Debug functionality** for development
 
 ---
 

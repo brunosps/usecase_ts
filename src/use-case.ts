@@ -1,4 +1,5 @@
 import { Context } from './context';
+import { getDebugLogger } from './debug';
 import { Failure, type Result, ResultPromise, Success } from './result';
 
 export interface IUseCase<I, O> {
@@ -29,27 +30,41 @@ export class BaseUseCase<I, O> implements IUseCase<I, O> {
    * This is used by the call method to create a Promise<Result<O>>.
    */
   private async _executeWithErrorHandling(params?: I): Promise<Result<O>> {
+    const debugLogger = getDebugLogger();
+    const useCaseClass = this.constructor.name;
+
+    // Start debug timing
+    debugLogger.startTiming(useCaseClass, params);
+
     try {
       const result = await this.execute(params);
 
       if (result.isFailure()) {
-        return Failure(result.getError(), result.getType(), result.context, this.constructor.name);
+        // Log failure
+        debugLogger.logFailure(useCaseClass, result.getError(), result.getType(), result.context);
+
+        return Failure(result.getError(), result.getType(), result.context, useCaseClass);
       }
 
-      return Success(
+      const successResult = Success(
         result.getValue(),
         {
-          [this.constructor.name]: new Context<I, O>(params as I, result.getValue()),
+          [useCaseClass]: new Context<I, O>(params as I, result.getValue()),
         },
-        this.constructor.name,
+        useCaseClass,
       );
+
+      // Log success
+      debugLogger.logSuccess(useCaseClass, result.getValue(), successResult.context);
+
+      return successResult;
     } catch (error) {
-      return Failure(
-        error instanceof Error ? error : new Error(String(error)),
-        'UNEXPECTED_ERROR',
-        { rawError: error },
-        this.constructor.name,
-      );
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+
+      // Log unexpected error
+      debugLogger.logFailure(useCaseClass, errorObj, 'UNEXPECTED_ERROR', { rawError: error });
+
+      return Failure(errorObj, 'UNEXPECTED_ERROR', { rawError: error }, useCaseClass);
     }
   }
 }

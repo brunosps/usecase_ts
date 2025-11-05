@@ -1,4 +1,5 @@
 import { Result, Success, Failure } from './result';
+import { getDebugLogger } from './debug';
 
 export type ErrorMapping = {
   errorType: new (...args: any[]) => Error;
@@ -119,14 +120,25 @@ export const ResultWrapper = <T>(
   }
 
   const { errorMappings = [], defaultFailureType = 'FAILURE', context, useCaseClass } = config;
+  const debugLogger = getDebugLogger();
+  const startTime = Date.now();
+  const functionName = fn.name || 'anonymous';
 
   try {
     const result = fn(...params);
+
+    // Log success
+    const duration = Date.now() - startTime;
+    debugLogger.logWrapper('ResultWrapper', true, functionName, undefined, duration);
+
     return Success(result, context, useCaseClass);
   } catch (error) {
     const mappedFailureType = mapErrorToFailureType(error, errorMappings, defaultFailureType);
-
     const wrappedError = error instanceof Error ? error : new Error(String(error));
+
+    // Log failure
+    const duration = Date.now() - startTime;
+    debugLogger.logWrapper('ResultWrapper', false, functionName, wrappedError, duration);
 
     return Failure<T>(wrappedError, mappedFailureType, context, useCaseClass);
   }
@@ -158,14 +170,25 @@ export const ResultAsyncWrapper = async <T>(
   }
 
   const { errorMappings = [], defaultFailureType = 'FAILURE', context, useCaseClass } = config;
+  const debugLogger = getDebugLogger();
+  const startTime = Date.now();
+  const functionName = fn.name || 'anonymous';
 
   try {
     const result = await fn(...params);
+
+    // Log success
+    const duration = Date.now() - startTime;
+    debugLogger.logWrapper('ResultAsyncWrapper', true, functionName, undefined, duration);
+
     return Success(result, context, useCaseClass);
   } catch (error) {
     const mappedFailureType = mapErrorToFailureType(error, errorMappings, defaultFailureType);
-
     const wrappedError = error instanceof Error ? error : new Error(String(error));
+
+    // Log failure
+    const duration = Date.now() - startTime;
+    debugLogger.logWrapper('ResultAsyncWrapper', false, functionName, wrappedError, duration);
 
     return Failure<T>(wrappedError, mappedFailureType, context, useCaseClass);
   }
@@ -184,10 +207,15 @@ export const ResultWrapValue = <T>(
   options: ValueWrapperOptions = {},
 ): Result<T> => {
   const { errorMappings = [], defaultFailureType = 'FAILURE', context, useCaseClass } = options;
+  const debugLogger = getDebugLogger();
 
   // Se o valor é um Error, retorna Failure
   if (value instanceof Error) {
     const mappedFailureType = mapErrorToFailureType(value, errorMappings, defaultFailureType);
+
+    // Log failure
+    debugLogger.logWrapper('ResultWrapValue', false, 'wrappedError', value);
+
     return Failure<T>(value, mappedFailureType, context, useCaseClass);
   }
 
@@ -198,8 +226,15 @@ export const ResultWrapValue = <T>(
       typeof validationResult === 'string' ? validationResult : 'Validation failed',
     );
     const mappedFailureType = mapErrorToFailureType(error, errorMappings, defaultFailureType);
+
+    // Log validation failure
+    debugLogger.logWrapper('ResultWrapValue', false, 'validation', error);
+
     return Failure<T>(error, mappedFailureType, context, useCaseClass);
   }
+
+  // Log success
+  debugLogger.logWrapper('ResultWrapValue', true, 'wrappedValue');
 
   return Success(value as T, context, useCaseClass);
 };
@@ -217,11 +252,17 @@ export const ResultWrapValueAsync = async <T>(
   options: ValueWrapperOptions = {},
 ): Promise<Result<T>> => {
   const { errorMappings = [], defaultFailureType = 'FAILURE', context, useCaseClass } = options;
+  const debugLogger = getDebugLogger();
+  const startTime = Date.now();
 
   try {
     // Se o valor é um Error, retorna Failure
     if (value instanceof Error) {
       const mappedFailureType = mapErrorToFailureType(value, errorMappings, defaultFailureType);
+
+      // Log failure
+      debugLogger.logWrapper('ResultWrapValueAsync', false, 'wrappedError', value);
+
       return Failure<T>(value, mappedFailureType, context, useCaseClass);
     }
 
@@ -235,14 +276,26 @@ export const ResultWrapValueAsync = async <T>(
         typeof validationResult === 'string' ? validationResult : 'Validation failed',
       );
       const mappedFailureType = mapErrorToFailureType(error, errorMappings, defaultFailureType);
+
+      // Log validation failure
+      const duration = Date.now() - startTime;
+      debugLogger.logWrapper('ResultWrapValueAsync', false, 'validation', error, duration);
+
       return Failure<T>(error, mappedFailureType, context, useCaseClass);
     }
+
+    // Log success
+    const duration = Date.now() - startTime;
+    debugLogger.logWrapper('ResultWrapValueAsync', true, 'wrappedAsyncValue', undefined, duration);
 
     return Success(resolvedValue as T, context, useCaseClass);
   } catch (error) {
     const mappedFailureType = mapErrorToFailureType(error, errorMappings, defaultFailureType);
-
     const wrappedError = error instanceof Error ? error : new Error(String(error));
+
+    // Log async failure
+    const duration = Date.now() - startTime;
+    debugLogger.logWrapper('ResultWrapValueAsync', false, 'asyncError', wrappedError, duration);
 
     return Failure<T>(wrappedError, mappedFailureType, context, useCaseClass);
   }
