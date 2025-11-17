@@ -218,7 +218,7 @@ export class DebugLogger {
     try {
       // Try to get useful information from context
       const sanitized: any = {};
-      
+
       for (const [key, value] of Object.entries(context)) {
         if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
           sanitized[key] = value;
@@ -229,7 +229,7 @@ export class DebugLogger {
         } else if (typeof value === 'object') {
           // Try to extract useful properties from the object
           const objInfo: any = {};
-          
+
           // Get _inputParams and _outputParams if they exist
           if ('_inputParams' in value) {
             try {
@@ -238,7 +238,7 @@ export class DebugLogger {
               objInfo.input = '[Complex Input]';
             }
           }
-          
+
           if ('_outputParams' in value) {
             try {
               objInfo.output = this.formatContextData(value._outputParams, 200);
@@ -246,13 +246,16 @@ export class DebugLogger {
               objInfo.output = '[Complex Output]';
             }
           }
-          
+
           // If we got useful info, use it; otherwise just show keys
           if (Object.keys(objInfo).length > 0) {
             sanitized[key] = objInfo;
           } else {
             const keys = Object.keys(value);
-            sanitized[key] = keys.length > 0 ? `{${keys.slice(0, 5).join(', ')}${keys.length > 5 ? '...' : ''}}` : '{}';
+            sanitized[key] =
+              keys.length > 0
+                ? `{${keys.slice(0, 5).join(', ')}${keys.length > 5 ? '...' : ''}}`
+                : '{}';
           }
         }
       }
@@ -282,18 +285,23 @@ export class DebugLogger {
       // If it's an object or array, try to show a preview
       if (typeof data === 'object') {
         if (Array.isArray(data)) {
-          return `Array(${data.length}) [${data.slice(0, 2).map(item => {
-            const str = JSON.stringify(item);
-            return str.length > 30 ? `${str.substring(0, 30)}...` : str;
-          }).join(', ')}${data.length > 2 ? ', ...' : ''}]`;
+          return `Array(${data.length}) [${data
+            .slice(0, 2)
+            .map(item => {
+              const str = JSON.stringify(item);
+              return str.length > 30 ? `${str.substring(0, 30)}...` : str;
+            })
+            .join(', ')}${data.length > 2 ? ', ...' : ''}]`;
         } else {
           // Show first few keys with their values
           const entries = Object.entries(data).slice(0, 3);
-          const preview = entries.map(([k, v]) => {
-            const valStr = JSON.stringify(v);
-            const shortVal = valStr.length > 30 ? `${valStr.substring(0, 30)}...` : valStr;
-            return `${k}: ${shortVal}`;
-          }).join(', ');
+          const preview = entries
+            .map(([k, v]) => {
+              const valStr = JSON.stringify(v);
+              const shortVal = valStr.length > 30 ? `${valStr.substring(0, 30)}...` : valStr;
+              return `${k}: ${shortVal}`;
+            })
+            .join(', ');
 
           const totalKeys = Object.keys(data).length;
           return `{${preview}${totalKeys > 3 ? `, ... +${totalKeys - 3} more` : ''}}`;
