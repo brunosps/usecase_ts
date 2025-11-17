@@ -105,9 +105,9 @@ describe('Debug Functionality', () => {
       logger.startTiming('TestCase', { input: 'test' });
       logger.logSuccess('TestCase', { result: 'success' });
 
-      expect(mockOutput).toHaveLength(2);
+      // In verbose mode, now uses 2 separate console.log calls (title + JSON)
+      expect(mockOutput).toHaveLength(3); // start + title + json
 
-      // In verbose mode, console.log is called with multiple arguments
       const firstLog = Array.isArray(mockOutput[0]) ? mockOutput[0][0] : mockOutput[0];
       const secondLog = Array.isArray(mockOutput[1]) ? mockOutput[1][0] : mockOutput[1];
 

@@ -69,12 +69,20 @@ export class DebugLogger {
     const duration = this.getDuration(useCaseClass);
 
     if (this.config.level === 'verbose') {
-      console.log(`✅ [USECASE:SUCCESS] ${useCaseClass}`, {
-        duration: `${duration}ms`,
-        output: this.sanitizeOutput(data),
-        context: this.sanitizeContext(context),
-        timestamp: new Date().toISOString(),
-      });
+      const sanitizedContext = this.sanitizeContextVerbose(context);
+      console.log(`✅ [USECASE:SUCCESS] ${useCaseClass}`);
+      console.log(
+        JSON.stringify(
+          {
+            duration: `${duration}ms`,
+            output: this.sanitizeOutput(data),
+            context: sanitizedContext,
+            timestamp: new Date().toISOString(),
+          },
+          null,
+          2,
+        ),
+      );
     } else {
       console.log(`✅ [USECASE:SUCCESS] ${useCaseClass} (${duration}ms)`);
     }
@@ -102,7 +110,7 @@ export class DebugLogger {
           name: error.name,
           stack: error.stack?.split('\n').slice(0, 3).join('\n'), // First 3 lines only
         },
-        context: this.sanitizeContext(context),
+        context: this.sanitizeContextVerbose(context),
         timestamp: new Date().toISOString(),
       });
     } else {
@@ -187,13 +195,18 @@ export class DebugLogger {
   private sanitizeOutput(output: any): any {
     if (!output) return output;
 
-    // Limit size of logged output
-    const stringified = JSON.stringify(output);
-    if (stringified.length > 500) {
-      return `${stringified.substring(0, 500)}... [truncated]`;
-    }
+    try {
+      // Limit size of logged output
+      const stringified = JSON.stringify(output, null, 2);
+      if (stringified.length > 1000) {
+        return `${stringified.substring(0, 1000)}... [truncated]`;
+      }
 
-    return output;
+      return output;
+    } catch (error) {
+      // Handle circular references
+      return '[Complex Object - cannot stringify]';
+    }
   }
 
   /**
@@ -202,17 +215,134 @@ export class DebugLogger {
   private sanitizeContext(context?: Record<string, any>): any {
     if (!context) return undefined;
 
-    // Remove complex objects to avoid circular references
-    const sanitized: any = {};
-    for (const [key, value] of Object.entries(context)) {
-      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-        sanitized[key] = value;
-      } else if (value && typeof value === 'object') {
-        sanitized[key] = '[Object]';
+    try {
+      // Try to get useful information from context
+      const sanitized: any = {};
+      
+      for (const [key, value] of Object.entries(context)) {
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          sanitized[key] = value;
+        } else if (value === null || value === undefined) {
+          sanitized[key] = value;
+        } else if (Array.isArray(value)) {
+          sanitized[key] = `Array(${value.length})`;
+        } else if (typeof value === 'object') {
+          // Try to extract useful properties from the object
+          const objInfo: any = {};
+          
+          // Get _inputParams and _outputParams if they exist
+          if ('_inputParams' in value) {
+            try {
+              objInfo.input = this.formatContextData(value._inputParams, 200);
+            } catch {
+              objInfo.input = '[Complex Input]';
+            }
+          }
+          
+          if ('_outputParams' in value) {
+            try {
+              objInfo.output = this.formatContextData(value._outputParams, 200);
+            } catch {
+              objInfo.output = '[Complex Output]';
+            }
+          }
+          
+          // If we got useful info, use it; otherwise just show keys
+          if (Object.keys(objInfo).length > 0) {
+            sanitized[key] = objInfo;
+          } else {
+            const keys = Object.keys(value);
+            sanitized[key] = keys.length > 0 ? `{${keys.slice(0, 5).join(', ')}${keys.length > 5 ? '...' : ''}}` : '{}';
+          }
+        }
       }
+
+      return sanitized;
+    } catch (error) {
+      return '[Context - cannot process]';
+    }
+  }
+
+  /**
+   * Format context data for logging with proper truncation
+   */
+  private formatContextData(data: any, maxLength: number = 200): any {
+    if (data === null || data === undefined) {
+      return data;
     }
 
-    return sanitized;
+    try {
+      const jsonStr = JSON.stringify(data);
+
+      // If it's small enough, parse it back to show as object
+      if (jsonStr.length <= maxLength) {
+        return data;
+      }
+
+      // If it's an object or array, try to show a preview
+      if (typeof data === 'object') {
+        if (Array.isArray(data)) {
+          return `Array(${data.length}) [${data.slice(0, 2).map(item => {
+            const str = JSON.stringify(item);
+            return str.length > 30 ? `${str.substring(0, 30)}...` : str;
+          }).join(', ')}${data.length > 2 ? ', ...' : ''}]`;
+        } else {
+          // Show first few keys with their values
+          const entries = Object.entries(data).slice(0, 3);
+          const preview = entries.map(([k, v]) => {
+            const valStr = JSON.stringify(v);
+            const shortVal = valStr.length > 30 ? `${valStr.substring(0, 30)}...` : valStr;
+            return `${k}: ${shortVal}`;
+          }).join(', ');
+
+          const totalKeys = Object.keys(data).length;
+          return `{${preview}${totalKeys > 3 ? `, ... +${totalKeys - 3} more` : ''}}`;
+        }
+      }
+
+      // For strings or other types, just truncate
+      return `${jsonStr.substring(0, maxLength)}...`;
+    } catch {
+      return '[Complex Data]';
+    }
+  }
+
+  /**
+   * Sanitize context for verbose logging with better formatting
+   */
+  private sanitizeContextVerbose(context?: Record<string, any>): any {
+    if (!context) return undefined;
+
+    try {
+      const result: any = {};
+
+      for (const [key, value] of Object.entries(context)) {
+        if (typeof value === 'object' && value !== null) {
+          // Check if it's a use case context with _inputParams and _outputParams
+          if ('_inputParams' in value || '_outputParams' in value) {
+            const contextInfo: any = {};
+
+            if ('_inputParams' in value) {
+              contextInfo.input = value._inputParams;
+            }
+
+            if ('_outputParams' in value) {
+              contextInfo.output = value._outputParams;
+            }
+
+            result[key] = contextInfo;
+          } else {
+            result[key] = value;
+          }
+        } else {
+          result[key] = value;
+        }
+      }
+
+      return result;
+    } catch (error) {
+      return context;
+    }
   }
 }
 
